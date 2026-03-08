@@ -64,12 +64,21 @@
             position: relative;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             overflow-y: auto;
+            width: 100%;
         }
 
         /* --- ホーム画面 --- */
-        #home-screen { text-align: center; }
+        #home-screen {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100%;
+            width: 100%;
+        }
         .pack-display {
             width: 200px;
             height: 300px;
@@ -245,7 +254,7 @@
         @keyframes holoAnim { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
 
         /* --- リザルト画面 --- */
-        #result-screen { display: none; width: 100%; padding: 20px; text-align: center; }
+        #result-screen { display: none; width: 100%; padding: 20px; text-align: center; margin: 0 auto; }
         .result-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-top: 20px; }
         .result-grid .card-container { position: relative; width: 120px; height: 170px; transform: rotateY(180deg); cursor: default; }
         .result-grid .card-name { font-size: 14px; }
@@ -253,7 +262,7 @@
         .result-grid .rarity-icon { width: 20px; height: 20px; font-size: 8px; bottom: -10px; }
 
         /* --- 図鑑 --- */
-        #collection-area { display: none; width: 100%; max-width: 800px; padding: 20px; }
+        #collection-area { display: none; width: 100%; max-width: 800px; padding: 20px; margin: 0 auto; }
         .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px; padding: 10px; }
         
         .col-item { 
@@ -401,7 +410,7 @@
 
     function nav(screen) {
         document.querySelectorAll('main > div').forEach(d => d.style.display = 'none');
-        if(screen === 'home') document.getElementById('home-screen').style.display = 'block';
+        if(screen === 'home') document.getElementById('home-screen').style.display = 'flex';
         if(screen === 'collection') { document.getElementById('collection-area').style.display = 'block'; renderCollection(); }
     }
 
