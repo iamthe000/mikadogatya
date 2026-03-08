@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歴代天皇ガチャ</title>
+    <style>
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #e74c3c;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #c0392b;
+        }
+        .results {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .card {
+            width: 120px;
+            padding: 15px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            animation: popIn 0.3s ease-out forwards;
+            opacity: 0;
+            transform: scale(0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        @keyframes popIn {
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        .card .generation {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        .card .name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .card .rarity {
+            font-size: 14px;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 3px;
+        }
+        /* レアリティ別の装飾 */
+        .rarity-UR { background: linear-gradient(45deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%); color: #d35400; border: 2px solid #e67e22;}
+        .rarity-SSR { background-color: #f1c40f; color: #fff; border: 2px solid #f39c12;}
+        .rarity-SR { background-color: #bdc3c7; color: #2c3e50; border: 2px solid #95a5a6;}
+        .rarity-R { background-color: #3498db; color: #fff; }
+        .rarity-N { background-color: #ecf0f1; color: #7f8c8d; }
+    </style>
+</head>
+<body>
+
+    <h1>⛩️ 歴代天皇ガチャ ⛩️</h1>
+    <div class="controls">
+        <button onclick="drawGacha(1)">単発ガチャ</button>
+        <button onclick="drawGacha(10)">10連ガチャ</button>
+    </div>
+    <div class="results" id="results"></div>
+
+    <script>
+        // 天皇のデータ（※全126代のうち代表的なものをピックアップしています）
+        const emperors = {
+            UR: [
+                { gen: 1, name: "神武天皇" },
+                { gen: 50, name: "桓武天皇" },
+                { gen: 96, name: "後醍醐天皇" },
+                { gen: 122, name: "明治天皇" }
+            ],
+            SSR: [
+                { gen: 15, name: "応神天皇" },
+                { gen: 16, name: "仁徳天皇" },
+                { gen: 38, name: "天智天皇" },
+                { gen: 40, name: "天武天皇" },
+                { gen: 45, name: "聖武天皇" },
+                { gen: 77, name: "後白河天皇" }
+            ],
+            SR: [
+                { gen: 26, name: "継体天皇" },
+                { gen: 33, name: "推古天皇" },
+                { gen: 72, name: "白河天皇" },
+                { gen: 82, name: "後鳥羽天皇" },
+                { gen: 124, name: "昭和天皇" }
+            ],
+            R: [
+                { gen: 2, name: "綏靖天皇" },
+                { gen: 10, name: "崇神天皇" },
+                { gen: 21, name: "雄略天皇" },
+                { gen: 35, name: "皇極天皇" },
+                { gen: 121, name: "孝明天皇" }
+            ],
+            N: [
+                { gen: 3, name: "安寧天皇" },
+                { gen: 4, name: "懿徳天皇" },
+                { gen: 5, name: "孝昭天皇" },
+                { gen: 6, name: "孝安天皇" },
+                { gen: 7, name: "孝霊天皇" },
+                { gen: 8, name: "孝元天皇" },
+                { gen: 9, name: "開化天皇" }
+            ]
+        };
+
+        // 排出確率の設定（合計100%）
+        const probabilities = [
+            { rarity: "UR", chance: 2 },   // 2%
+            { rarity: "SSR", chance: 8 },  // 8%
+            { rarity: "SR", chance: 20 },  // 20%
+            { rarity: "R", chance: 30 },   // 30%
+            { rarity: "N", chance: 40 }    // 40%
+        ];
+
+        // 1回ガチャを引くロジック
+        function pullOne() {
+            const rand = Math.random() * 100;
+            let cumulative = 0;
+            let selectedRarity = "N";
+
+            for (const prob of probabilities) {
+                cumulative += prob.chance;
+                if (rand < cumulative) {
+                    selectedRarity = prob.rarity;
+                    break;
+                }
+            }
+
+            // 選ばれたレアリティの中からランダムに1柱（1人）選ぶ
+            const pool = emperors[selectedRarity];
+            const selectedEmperor = pool[Math.floor(Math.random() * pool.length)];
+            
+            return {
+                ...selectedEmperor,
+                rarity: selectedRarity
+            };
+        }
+
+        // ガチャを実行して画面に表示する関数
+        function drawGacha(times) {
+            const resultsContainer = document.getElementById('results');
+            resultsContainer.innerHTML = ''; // 前の結果をクリア
+
+            for (let i = 0; i < times; i++) {
+                // 少しずつアニメーションを遅延させるための設定
+                setTimeout(() => {
+                    const result = pullOne();
+                    const card = document.createElement('div');
+                    card.className = `card`;
+                    
+                    card.innerHTML = `
+                        <div class="generation">第${result.gen}代</div>
+                        <div class="name">${result.name}</div>
+                        <div class="rarity rarity-${result.rarity}">${result.rarity}</div>
+                    `;
+                    resultsContainer.appendChild(card);
+                }, i * 100); // 100msごとにカードを表示
+            }
+        }
+    </script>
+</body>
+</html>
