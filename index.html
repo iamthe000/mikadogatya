@@ -2,76 +2,140 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>天皇コレクション - パック開封</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>天皇コレクション - Imperial TCG</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&display=swap');
+
         :root {
-            --bg-color: #1a1a2e;
-            --card-back: #2c3e50;
-            --gold: #f1c40f;
+            --bg-color: #121212;
+            --primary: #c0392b;
+            --gold: #f39c12;
             --silver: #bdc3c7;
             --bronze: #cd7f32;
-            --ur-gradient: linear-gradient(45deg, #ff00cc, #3333ff);
         }
 
         body {
-            font-family: "Hiragino Mincho ProN", serif;
+            font-family: 'Noto Serif JP', serif;
             background-color: var(--bg-color);
             color: white;
             margin: 0;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
+            height: 100vh;
         }
 
         header {
-            padding: 20px;
+            padding: 15px;
             text-align: center;
+            background: linear-gradient(to bottom, #2c3e50, #1a252f);
+            border-bottom: 2px solid var(--gold);
+            z-index: 10;
         }
 
-        .nav {
-            margin-bottom: 20px;
+        h1 { margin: 0; font-size: 24px; letter-spacing: 2px; color: var(--gold); }
+
+        .resource-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+            font-size: 14px;
         }
 
         button {
-            padding: 10px 25px;
-            font-size: 16px;
+            padding: 8px 20px;
+            font-size: 14px;
             cursor: pointer;
-            background: #e74c3c;
+            background: var(--primary);
             color: white;
-            border: none;
-            border-radius: 20px;
+            border: 1px solid var(--gold);
+            border-radius: 5px;
+            font-family: inherit;
             font-weight: bold;
-            transition: 0.3s;
-            margin: 5px;
+            transition: 0.2s;
         }
 
-        button:hover { transform: scale(1.05); background: #ff5e4d; }
-        button:disabled { background: #555; }
+        button:hover { background: #e74c3c; transform: scale(1.05); }
 
-        /* パック開封エリア */
-        #pack-area {
+        main {
+            flex: 1;
+            position: relative;
             display: flex;
-            flex-wrap: wrap;
             justify-content: center;
-            gap: 20px;
-            perspective: 1000px;
-            min-height: 300px;
+            align-items: center;
+            overflow-y: auto;
         }
 
-        /* カードのスタイル */
-        .card-container {
-            width: 160px;
-            height: 240px;
+        /* --- ホーム画面 --- */
+        #home-screen { text-align: center; }
+        .pack-display {
+            width: 200px;
+            height: 300px;
+            background: linear-gradient(135deg, #2c3e50, #c0392b);
+            margin: 0 auto 20px;
+            border-radius: 10px;
+            border: 4px solid var(--gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
             position: relative;
             cursor: pointer;
-            transition: transform 0.6s;
-            transform-style: preserve-3d;
+        }
+        .pack-display::after {
+            content: "第一弾\A神話の幕開け";
+            white-space: pre;
+            text-align: center;
+            font-weight: 900;
+            font-size: 24px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
         }
 
-        .card-container.is-flipped {
-            transform: rotateY(180deg);
+        /* --- 開封演出エリア --- */
+        #opening-screen {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 20;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+        }
+
+        .instruction {
+            position: absolute;
+            top: 10%;
+            font-size: 18px;
+            color: #aaa;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+        .card-stack {
+            position: relative;
+            width: 240px;
+            height: 340px;
+        }
+
+        .card-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s;
+            cursor: pointer;
+        }
+
+        .card-container.slide-out {
+            transform: translateX(-150%) rotateY(180deg) rotateZ(-20deg) !important;
+            opacity: 0;
+            pointer-events: none;
         }
 
         .card-face {
@@ -79,211 +143,336 @@
             width: 100%;
             height: 100%;
             backface-visibility: hidden;
-            border-radius: 12px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.6);
             display: flex;
             flex-direction: column;
+            overflow: hidden;
+            background-color: #222;
+        }
+
+        .card-back {
+            background: repeating-linear-gradient(45deg, #1a1a1a 0, #1a1a1a 10px, #222 10px, #222 20px);
+            border: 8px solid #444;
+            display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            border: 4px solid #fff;
+        }
+        .card-back::before {
+            content: "菊";
+            font-size: 60px;
+            color: var(--gold);
+            opacity: 0.2;
         }
 
-        /* 裏面 */
-        .card-back {
-            background: var(--card-back);
-            background-image: repeating-linear-gradient(45deg, #34495e 0, #34495e 10px, #2c3e50 10px, #2c3e50 20px);
-        }
-
-        .card-back::after {
-            content: "菊紋"; /* 簡略化 */
-            font-size: 40px;
-            opacity: 0.3;
-        }
-
-        /* 表面 */
         .card-front {
-            background: #fff;
-            color: #333;
             transform: rotateY(180deg);
-            padding: 10px;
-            text-align: center;
-            box-sizing: border-box;
+            background: #fdf6e3;
+            color: #333;
+            border: 8px solid #eee;
         }
 
-        .rarity-label {
+        .card-image-area {
+            height: 50%;
+            background: #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 2px solid #333;
+            position: relative;
+            background-size: cover;
+            background-position: center top;
+        }
+
+        .card-info {
+            padding: 15px;
+            text-align: center;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .era-tag {
             font-size: 12px;
-            font-weight: bold;
-            padding: 2px 8px;
-            border-radius: 4px;
-            margin-bottom: 10px;
-        }
-
-        /* レアリティ演出 */
-        .UR { border-color: #ff00cc; background: var(--ur-gradient); color: white; }
-        .SSR { border-color: var(--gold); background: #fffde7; }
-        .SR { border-color: var(--silver); background: #f5f5f5; }
-
-        /* 図鑑エリア */
-        #collection-area {
-            display: none;
-            width: 90%;
-            max-width: 1000px;
-            padding: 20px;
-        }
-
-        .collection-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 10px;
-        }
-
-        .collection-item {
             background: #333;
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 11px;
-            text-align: center;
-            opacity: 0.4;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-bottom: 5px;
         }
 
-        .collection-item.owned {
+        .card-name { font-size: 22px; font-weight: 900; }
+        .card-number { font-size: 12px; color: #666; }
+
+        .rarity-icon {
+            position: absolute;
+            bottom: -15px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            background: #333;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            border: 2px solid white;
+            z-index: 2;
+        }
+
+        /* レアリティ別装飾 */
+        .rarity-UR .card-front { border-color: #ff00cc; }
+        .rarity-SSR .card-front { border-color: var(--gold); }
+        .rarity-SR .card-front { border-color: var(--silver); }
+
+        .holo-effect {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            mix-blend-mode: color-dodge;
+            opacity: 0;
+        }
+        .rarity-UR .holo-effect {
+            background: linear-gradient(125deg, rgba(255,0,204,0.4), rgba(51,51,255,0.4), rgba(0,255,255,0.4), rgba(255,0,204,0.4));
+            background-size: 400% 400%;
+            animation: holoAnim 3s ease infinite;
             opacity: 1;
-            background: #444;
-            border: 1px solid var(--gold);
         }
+        @keyframes holoAnim { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
 
-        .stats { margin-top: 10px; color: var(--gold); }
+        /* --- リザルト画面 --- */
+        #result-screen { display: none; width: 100%; padding: 20px; text-align: center; }
+        .result-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-top: 20px; }
+        .result-grid .card-container { position: relative; width: 120px; height: 170px; transform: rotateY(180deg); cursor: default; }
+        .result-grid .card-name { font-size: 14px; }
+        .result-grid .card-front { border-width: 4px; }
+        .result-grid .rarity-icon { width: 20px; height: 20px; font-size: 8px; bottom: -10px; }
+
+        /* --- 図鑑 --- */
+        #collection-area { display: none; width: 100%; max-width: 800px; padding: 20px; }
+        .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; }
+        .col-item { background: #222; border: 1px solid #444; border-radius: 5px; padding: 5px; text-align: center; font-size: 10px; opacity: 0.3; aspect-ratio: 2/3; display: flex; flex-direction: column; justify-content: center; }
+        .col-item.owned { opacity: 1; background: #333; border-color: var(--gold); font-weight: bold; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>Imperial Gacha Deck</h1>
-    <div class="nav">
-        <button onclick="showGacha()">ガチャを引く</button>
-        <button onclick="showCollection()">コレクション図鑑</button>
+    <h1>Imperial TCG Pocket</h1>
+    <div class="resource-bar">
+        <div>Pt: <span id="pt-display">1000</span></div>
+        <div>収集率: <span id="comp-display">0/126</span></div>
     </div>
-    <div id="status-msg">「5連ガチャ」でパックを開封せよ</div>
+    <div style="margin-top: 15px;">
+        <button onclick="nav('home')">ガチャ</button>
+        <button onclick="nav('collection')">図鑑</button>
+        <button onclick="addPt()" style="background:#27ae60;">Ptチャージ</button>
+    </div>
 </header>
 
 <main>
-    <div id="gacha-screen">
-        <div style="text-align:center; margin-bottom: 20px;">
-            <button onclick="startGacha()">5連パック開封！</button>
-        </div>
-        <div id="pack-area"></div>
+    <div id="home-screen">
+        <h2 style="margin-bottom: 30px;">拡張パック「神話の幕開け」</h2>
+        <div class="pack-display" onclick="buyPack()"></div>
+        <button onclick="buyPack()">5枚入りパックを開封 (500 Pt)</button>
+    </div>
+
+    <div id="opening-screen">
+        <div class="instruction" id="open-inst">カードをタップしてめくる</div>
+        <div class="card-stack" id="card-stack"></div>
+    </div>
+
+    <div id="result-screen">
+        <h2>獲得カード</h2>
+        <div class="result-grid" id="result-grid"></div>
+        <button onclick="nav('home')" style="margin-top: 30px;">完了</button>
     </div>
 
     <div id="collection-area">
-        <div class="stats" id="stats-text">所持数: 0 / 126</div>
-        <hr>
+        <h2>皇統譜図鑑</h2>
         <div class="collection-grid" id="collection-grid"></div>
     </div>
 </main>
 
 <script>
-    // データ定義（簡易版：実際には126代分入れる想定）
-    const masterData = [
-        { id: 1, name: "神武天皇", rarity: "UR" },
-        { id: 15, name: "応神天皇", rarity: "SSR" },
-        { id: 16, name: "仁徳天皇", rarity: "SSR" },
-        { id: 33, name: "推古天皇", rarity: "SR" },
-        { id: 38, name: "天智天皇", rarity: "SSR" },
-        { id: 40, name: "天武天皇", rarity: "SSR" },
-        { id: 45, name: "聖武天皇", rarity: "SR" },
-        { id: 50, name: "桓武天皇", rarity: "SSR" },
-        { id: 77, name: "後白河天皇", rarity: "SR" },
-        { id: 82, name: "後鳥羽天皇", rarity: "SR" },
-        { id: 96, name: "後醍醐天皇", rarity: "UR" },
-        { id: 122, name: "明治天皇", rarity: "UR" },
-        { id: 124, name: "昭和天皇", rarity: "SR" },
-        { id: 125, name: "上皇陛下", rarity: "SSR" },
-        { id: 126, name: "今上天皇", rarity: "UR" }
-    ];
+    const namesStr = "神武 綏靖 安寧 懿徳 孝昭 孝安 孝霊 孝元 開化 崇神 垂仁 景行 成務 仲哀 応神 仁徳 履中 反正 允恭 安康 雄略 清寧 顕宗 仁賢 武烈 継体 安閑 宣化 欽明 敏達 用明 崇峻 推古 舒明 皇極 孝徳 斉明 天智 弘文 天武 持統 文武 元明 元正 聖武 孝謙 淳仁 称徳 光仁 桓武 平城 嵯峨 淳和 仁明 文徳 清和 陽成 光孝 宇多 醍醐 朱雀 村上 冷泉 円融 花山 一条 三条 後一条 後朱雀 後冷泉 後三条 白河 堀河 鳥羽 崇徳 近衛 後白河 二条 六条 高倉 安徳 後鳥羽 土御門 順徳 仲恭 後堀河 四条 後嵯峨 後深草 亀山 後宇多 伏見 後伏見 後二条 花園 後醍醐 後村上 長慶 後亀山 後小松 称光 後花園 後土御門 後柏原 後奈良 正親町 後陽成 後水尾 明正 後光明 後西 霊元 東山 中御門 桜町 桃園 後桜町 後桃園 光格 仁孝 孝明 明治 大正 昭和 上皇 今上";
+    const nameArray = namesStr.split(" ");
 
-    // Nランクとして残りの代を補完
-    for(let i=1; i<=126; i++) {
-        if(!masterData.find(e => e.id === i)) {
-            masterData.push({ id: i, name: `第${i}代天皇`, rarity: "N" });
+    const urIds = [1, 15, 16, 33, 38, 40, 45, 50, 72, 77, 82, 96, 122, 124];
+    const ssrIds = [10, 21, 26, 35, 41, 60, 66, 71, 81, 100, 106, 123, 125, 126];
+    const srIds = [11, 12, 34, 36, 43, 52, 56, 59, 62, 74, 75, 88, 107, 108, 121];
+
+    function getEra(id) {
+        if(id <= 32) return "古代";
+        if(id <= 42) return "飛鳥";
+        if(id <= 49) return "奈良";
+        if(id <= 77) return "平安";
+        if(id <= 95) return "鎌倉";
+        if(id <= 100) return "南北朝";
+        if(id <= 105) return "室町";
+        if(id <= 107) return "安土桃山";
+        if(id <= 121) return "江戸";
+        return "近現代";
+    }
+
+    const masterData = nameArray.map((name, index) => {
+        const id = index + 1;
+        let rarity = "N";
+        if(urIds.includes(id)) rarity = "UR";
+        else if(ssrIds.includes(id)) rarity = "SSR";
+        else if(srIds.includes(id)) rarity = "SR";
+        else if(id % 4 === 0) rarity = "R";
+        return { id, name: name + (id >= 125 ? "陛下" : "天皇"), rarity, era: getEra(id) };
+    });
+
+    let playerPt = parseInt(localStorage.getItem('imp_pt') || "1000");
+    let ownedIds = JSON.parse(localStorage.getItem('imp_owned') || "[]");
+    let currentPull = [];
+    let currentCardIndex = 0;
+
+    updateHeader();
+
+    function updateHeader() {
+        document.getElementById('pt-display').innerText = playerPt;
+        document.getElementById('comp-display').innerText = `${ownedIds.length}/126`;
+        localStorage.setItem('imp_pt', playerPt);
+        localStorage.setItem('imp_owned', JSON.stringify(ownedIds));
+    }
+
+    function addPt() { playerPt += 500; updateHeader(); }
+
+    function nav(screen) {
+        document.querySelectorAll('main > div').forEach(d => d.style.display = 'none');
+        if(screen === 'home') document.getElementById('home-screen').style.display = 'block';
+        if(screen === 'collection') { document.getElementById('collection-area').style.display = 'block'; renderCollection(); }
+    }
+
+    // --- Wikipedia画像取得ロジック ---
+    async function fetchWikiImage(name, id) {
+        // Wikipediaの検索ワード調整
+        let query = name.replace("陛下", "");
+        if (id === 125) query = "明仁"; // 上皇陛下
+        if (id === 126) query = "徳仁"; // 今上陛下
+        if (!query.endsWith("天皇")) query += "天皇";
+
+        try {
+            const url = `https://ja.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            return data.thumbnail ? data.thumbnail.source : null;
+        } catch (e) {
+            return null;
         }
     }
 
-    let ownedIds = JSON.parse(localStorage.getItem('ownedEmperors') || "[]");
-
-    function showGacha() {
-        document.getElementById('gacha-screen').style.display = 'block';
-        document.getElementById('collection-area').style.display = 'none';
+    async function applyWikiImage(el, name, id) {
+        const imgSrc = await fetchWikiImage(name, id);
+        if (imgSrc) {
+            const imgArea = el.querySelector('.card-image-area');
+            imgArea.style.backgroundImage = `url(${imgSrc})`;
+            imgArea.querySelector('.placeholder-text').style.display = 'none';
+        }
     }
 
-    function showCollection() {
-        document.getElementById('gacha-screen').style.display = 'none';
-        document.getElementById('collection-area').style.display = 'block';
-        renderCollection();
+    function buyPack() {
+        if (playerPt < 500) { alert("Pt不足です"); return; }
+        playerPt -= 500; updateHeader();
+        currentPull = Array.from({length: 5}, () => {
+            const rand = Math.random() * 100;
+            let rarity = rand < 2 ? "UR" : rand < 10 ? "SSR" : rand < 30 ? "SR" : rand < 60 ? "R" : "N";
+            const pool = masterData.filter(e => e.rarity === rarity);
+            const card = pool[Math.floor(Math.random() * pool.length)];
+            if(!ownedIds.includes(card.id)) ownedIds.push(card.id);
+            return card;
+        });
+        updateHeader();
+        startOpeningSequence();
+    }
+
+    function startOpeningSequence() {
+        nav('none');
+        document.getElementById('opening-screen').style.display = 'flex';
+        const stack = document.getElementById('card-stack');
+        stack.innerHTML = '';
+        currentCardIndex = 4;
+
+        currentPull.forEach((card, i) => {
+            const el = document.createElement('div');
+            el.className = `card-container rarity-${card.rarity}`;
+            el.style.zIndex = i;
+            el.style.transform = `translateZ(${-i * 5}px) rotateZ(${(Math.random()-0.5)*4}deg)`;
+            
+            el.innerHTML = `
+                <div class="card-face card-back"></div>
+                <div class="card-face card-front">
+                    <div class="card-image-area">
+                        <div class="holo-effect"></div>
+                        <div class="placeholder-text" style="font-size:40px; opacity:0.2;">${card.name.charAt(0)}</div>
+                        <div class="rarity-icon">${card.rarity}</div>
+                    </div>
+                    <div class="card-info">
+                        <div><span class="era-tag">${card.era}</span><div class="card-number">第${card.id}代</div></div>
+                        <div class="card-name">${card.name}</div>
+                    </div>
+                </div>`;
+            
+            applyWikiImage(el, card.name, card.id);
+            el.onclick = () => {
+                if(i !== currentCardIndex) return;
+                if(!el.style.transform.includes('rotateY(180deg)')) {
+                    el.style.transform = `translateZ(20px) rotateY(180deg)`;
+                    document.getElementById('open-inst').innerText = "タップで次へ";
+                } else {
+                    el.classList.add('slide-out');
+                    currentCardIndex--;
+                    if(currentCardIndex < 0) setTimeout(showResult, 500);
+                    else document.getElementById('open-inst').innerText = "タップしてめくる";
+                }
+            };
+            stack.appendChild(el);
+        });
+    }
+
+    function showResult() {
+        nav('none');
+        document.getElementById('result-screen').style.display = 'block';
+        const grid = document.getElementById('result-grid');
+        grid.innerHTML = '';
+        [...currentPull].reverse().forEach(card => {
+            const el = document.createElement('div');
+            el.className = `card-container rarity-${card.rarity}`;
+            el.innerHTML = `
+                <div class="card-face card-front" style="transform:none">
+                    <div class="card-image-area">
+                        <div class="holo-effect"></div>
+                        <div class="placeholder-text" style="font-size:20px; opacity:0.2;">${card.name.charAt(0)}</div>
+                        <div class="rarity-icon">${card.rarity}</div>
+                    </div>
+                    <div class="card-info" style="padding:5px">
+                        <span class="era-tag" style="font-size:8px">${card.era}</span>
+                        <div class="card-name" style="font-size:12px">${card.name}</div>
+                    </div>
+                </div>`;
+            applyWikiImage(el, card.name, card.id);
+            grid.appendChild(el);
+        });
     }
 
     function renderCollection() {
         const grid = document.getElementById('collection-grid');
         grid.innerHTML = '';
-        masterData.sort((a,b) => a.id - b.id).forEach(emp => {
-            const isOwned = ownedIds.includes(emp.id);
+        masterData.forEach(emp => {
+            const owned = ownedIds.includes(emp.id);
             const div = document.createElement('div');
-            div.className = `collection-item ${isOwned ? 'owned' : ''}`;
-            div.innerHTML = `<div>第${emp.id}代</div><div>${isOwned ? emp.name : '？？？'}</div>`;
+            div.className = `col-item ${owned ? 'owned' : ''}`;
+            div.innerHTML = `<div>No.${emp.id}</div><div>${owned ? emp.name : '???'}</div>`;
             grid.appendChild(div);
         });
-        document.getElementById('stats-text').innerText = `コンプリート率: ${ownedIds.length} / 126`;
-    }
-
-    function startGacha() {
-        const packArea = document.getElementById('pack-area');
-        packArea.innerHTML = '';
-        
-        for(let i=0; i<5; i++) {
-            const result = pullOne();
-            saveCollection(result.id);
-            createCardElement(result, packArea, i);
-        }
-    }
-
-    function pullOne() {
-        const rand = Math.random() * 100;
-        let rarity = "N";
-        if(rand < 3) rarity = "UR";
-        else if(rand < 10) rarity = "SSR";
-        else if(rand < 30) rarity = "SR";
-        
-        const pool = masterData.filter(e => e.rarity === rarity);
-        return pool[Math.floor(Math.random() * pool.length)];
-    }
-
-    function saveCollection(id) {
-        if(!ownedIds.includes(id)) {
-            ownedIds.push(id);
-            localStorage.setItem('ownedEmperors', JSON.stringify(ownedIds));
-        }
-    }
-
-    function createCardElement(data, container, delay) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'card-container';
-        wrapper.style.transitionDelay = `${delay * 0.1}s`;
-        
-        wrapper.innerHTML = `
-            <div class="card-face card-back"></div>
-            <div class="card-face card-front ${data.rarity}">
-                <div class="rarity-label">${data.rarity}</div>
-                <div style="font-size:12px">第${data.id}代</div>
-                <div style="font-size:18px; font-weight:bold; margin-top:10px;">${data.name}</div>
-            </div>
-        `;
-
-        wrapper.onclick = function() {
-            this.classList.toggle('is-flipped');
-        };
-
-        container.appendChild(wrapper);
     }
 </script>
-
 </body>
 </html>
