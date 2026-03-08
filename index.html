@@ -254,9 +254,30 @@
 
         /* --- 図鑑 --- */
         #collection-area { display: none; width: 100%; max-width: 800px; padding: 20px; }
-        .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; }
-        .col-item { background: #222; border: 1px solid #444; border-radius: 5px; padding: 5px; text-align: center; font-size: 10px; opacity: 0.3; aspect-ratio: 2/3; display: flex; flex-direction: column; justify-content: center; }
-        .col-item.owned { opacity: 1; background: #333; border-color: var(--gold); font-weight: bold; }
+        .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px; padding: 10px; }
+        
+        .col-item { 
+            position: relative;
+            aspect-ratio: 2/3;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .col-item:hover { transform: scale(1.05); z-index: 5; }
+        
+        .locked { 
+            filter: grayscale(1) brightness(0.5);
+            opacity: 0.7;
+        }
+
+        .preview-card-container {
+            width: 280px;
+            height: 400px;
+            position: relative;
+        }
+        .preview-card-container .card-container {
+            position: relative;
+            transform: rotateY(180deg);
+        }
     </style>
 </head>
 <body>
@@ -298,6 +319,11 @@
     </div>
 </main>
 
+<div id="preview-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:100; justify-content:center; align-items:center; flex-direction:column;" onclick="closePreview()">
+    <div id="preview-content"></div>
+    <div style="margin-top:20px; color:white; font-weight:bold; text-shadow:0 2px 4px rgba(0,0,0,0.8);">タップで閉じる</div>
+</div>
+
 <script>
     const namesStr = "神武 綏靖 安寧 懿徳 孝昭 孝安 孝霊 孝元 開化 崇神 垂仁 景行 成務 仲哀 応神 仁徳 履中 反正 允恭 安康 雄略 清寧 顕宗 仁賢 武烈 継体 安閑 宣化 欽明 敏達 用明 崇峻 推古 舒明 皇極 孝徳 斉明 天智 弘文 天武 持統 文武 元明 元正 聖武 孝謙 淳仁 称徳 光仁 桓武 平城 嵯峨 淳和 仁明 文徳 清和 陽成 光孝 宇多 醍醐 朱雀 村上 冷泉 円融 花山 一条 三条 後一条 後朱雀 後冷泉 後三条 白河 堀河 鳥羽 崇徳 近衛 後白河 二条 六条 高倉 安徳 後鳥羽 土御門 順徳 仲恭 後堀河 四条 後嵯峨 後深草 亀山 後宇多 伏見 後伏見 後二条 花園 後醍醐 後村上 長慶 後亀山 後小松 称光 後花園 後土御門 後柏原 後奈良 正親町 後陽成 後水尾 明正 後光明 後西 霊元 東山 中御門 桜町 桃園 後桜町 後桃園 光格 仁孝 孝明 明治 大正 昭和 上皇 今上";
     const nameArray = namesStr.split(" ");
@@ -328,6 +354,34 @@
         else if(id % 4 === 0) rarity = "R";
         return { id, name: name + (id >= 125 ? "陛下" : "天皇"), rarity, era: getEra(id) };
     });
+
+    function getCardInnerHtml(card, isOwned) {
+        return `
+            <div class="card-image-area">
+                <div class="holo-effect"></div>
+                <div class="placeholder-text" style="font-size:40px; opacity:0.2;">${isOwned ? card.name.charAt(0) : '?'}</div>
+                <div class="rarity-icon">${isOwned ? card.rarity : '?'}</div>
+            </div>
+            <div class="card-info">
+                <div><span class="era-tag">${isOwned ? card.era : '???'}</span><div class="card-number">第${card.id}代</div></div>
+                <div class="card-name">${isOwned ? card.name : '???'}</div>
+            </div>`;
+    }
+
+    function createCardElement(card, isOwned) {
+        const el = document.createElement('div');
+        el.className = `card-container rarity-${isOwned ? card.rarity : 'N'}`;
+        if (!isOwned) el.classList.add('locked');
+        
+        el.innerHTML = `
+            <div class="card-face card-back"></div>
+            <div class="card-face card-front">
+                ${getCardInnerHtml(card, isOwned)}
+            </div>`;
+        
+        if (isOwned) applyWikiImage(el, card.name, card.id);
+        return el;
+    }
 
     let playerPt = parseInt(localStorage.getItem('imp_pt') || "1000");
     let ownedIds = JSON.parse(localStorage.getItem('imp_owned') || "[]");
@@ -401,26 +455,10 @@
         currentCardIndex = 4;
 
         currentPull.forEach((card, i) => {
-            const el = document.createElement('div');
-            el.className = `card-container rarity-${card.rarity}`;
+            const el = createCardElement(card, true);
             el.style.zIndex = i;
             el.style.transform = `translateZ(${-i * 5}px) rotateZ(${(Math.random()-0.5)*4}deg)`;
             
-            el.innerHTML = `
-                <div class="card-face card-back"></div>
-                <div class="card-face card-front">
-                    <div class="card-image-area">
-                        <div class="holo-effect"></div>
-                        <div class="placeholder-text" style="font-size:40px; opacity:0.2;">${card.name.charAt(0)}</div>
-                        <div class="rarity-icon">${card.rarity}</div>
-                    </div>
-                    <div class="card-info">
-                        <div><span class="era-tag">${card.era}</span><div class="card-number">第${card.id}代</div></div>
-                        <div class="card-name">${card.name}</div>
-                    </div>
-                </div>`;
-            
-            applyWikiImage(el, card.name, card.id);
             el.onclick = () => {
                 if(i !== currentCardIndex) return;
                 if(!el.style.transform.includes('rotateY(180deg)')) {
@@ -443,34 +481,71 @@
         const grid = document.getElementById('result-grid');
         grid.innerHTML = '';
         [...currentPull].reverse().forEach(card => {
-            const el = document.createElement('div');
-            el.className = `card-container rarity-${card.rarity}`;
-            el.innerHTML = `
-                <div class="card-face card-front" style="transform:none">
-                    <div class="card-image-area">
-                        <div class="holo-effect"></div>
-                        <div class="placeholder-text" style="font-size:20px; opacity:0.2;">${card.name.charAt(0)}</div>
-                        <div class="rarity-icon">${card.rarity}</div>
-                    </div>
-                    <div class="card-info" style="padding:5px">
-                        <span class="era-tag" style="font-size:8px">${card.era}</span>
-                        <div class="card-name" style="font-size:12px">${card.name}</div>
-                    </div>
-                </div>`;
-            applyWikiImage(el, card.name, card.id);
+            const el = createCardElement(card, true);
+            el.style.transform = "none";
+            const front = el.querySelector('.card-front');
+            front.style.transform = "none";
+            front.style.borderWidth = "4px";
+            el.querySelector('.card-back').style.display = "none";
+            
+            el.querySelector('.card-name').style.fontSize = "12px";
+            el.querySelector('.era-tag').style.fontSize = "8px";
+            const rarityIcon = el.querySelector('.rarity-icon');
+            rarityIcon.style.width = "20px";
+            rarityIcon.style.height = "20px";
+            rarityIcon.style.fontSize = "8px";
+            rarityIcon.style.bottom = "-10px";
+
             grid.appendChild(el);
         });
+    }
+
+    function showPreview(cardId) {
+        const card = masterData.find(c => c.id === cardId);
+        if (!card) return;
+        const modal = document.getElementById('preview-modal');
+        const content = document.getElementById('preview-content');
+        content.innerHTML = '';
+        
+        const cardEl = createCardElement(card, true);
+        const container = document.createElement('div');
+        container.className = 'preview-card-container';
+        container.appendChild(cardEl);
+        content.appendChild(container);
+        
+        modal.style.display = 'flex';
+    }
+
+    function closePreview() {
+        document.getElementById('preview-modal').style.display = 'none';
     }
 
     function renderCollection() {
         const grid = document.getElementById('collection-grid');
         grid.innerHTML = '';
-        masterData.forEach(emp => {
-            const owned = ownedIds.includes(emp.id);
-            const div = document.createElement('div');
-            div.className = `col-item ${owned ? 'owned' : ''}`;
-            div.innerHTML = `<div>No.${emp.id}</div><div>${owned ? emp.name : '???'}</div>`;
-            grid.appendChild(div);
+        masterData.forEach(card => {
+            const owned = ownedIds.includes(card.id);
+            const el = createCardElement(card, owned);
+            el.classList.add('col-item');
+            el.style.transform = "none";
+            
+            // 図鑑用にスタイル微調整
+            const front = el.querySelector('.card-front');
+            front.style.transform = "none";
+            front.style.borderWidth = "4px";
+            el.querySelector('.card-back').style.display = "none";
+            el.querySelector('.card-name').style.fontSize = "12px";
+            el.querySelector('.era-tag').style.fontSize = "8px";
+            const rarityIcon = el.querySelector('.rarity-icon');
+            rarityIcon.style.width = "20px";
+            rarityIcon.style.height = "20px";
+            rarityIcon.style.fontSize = "8px";
+            rarityIcon.style.bottom = "-10px";
+
+            if (owned) {
+                el.onclick = () => showPreview(card.id);
+            }
+            grid.appendChild(el);
         });
     }
 </script>
